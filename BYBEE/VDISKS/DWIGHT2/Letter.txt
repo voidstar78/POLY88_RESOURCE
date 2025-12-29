@@ -1,0 +1,26 @@
+Hi Bob
+
+Attached are both the collection of the 5.25 disk that I extracted 
+images from a few years ago and the 8 inch disk that was just done.
+
+The 8 inch include the BASIC last used. I noticed that they had
+4 options. They had combinations of 8 or 14 digits and software or hardware floating point. 
+The hardware floating point used the North Star floating point board ( I may have one of those ).
+
+There is source disk and generation disk in the 8 inch files as we.
+I would suspect I could get files loaded by using the FTP program if I want to play with them.
+
+Some of the code in the 5.25 library refers to a hard drive as well.
+There is some test code for CP/M compatibility as well. 
+
+In the 5.25 library is a disk called KENO. On it is a version of FORTH.GO I'll try to find time to play with it.
+
+Many of the disk are text file. I've expanded them with 0Dh to 0Dh 0Ah for ease of reading on a windows machine. I'm not sure how the poly would like those.
+
+The images are included so they could be easily extracted.
+
+There are a number of complete system images that could be loaded on your emulator.
+
+Have fun looking through them. Some of the source disk will most likely have names you remember.
+
+Dwight 	
