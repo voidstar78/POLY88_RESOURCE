@@ -5,3 +5,8 @@ Bob Bybee
 
 https://drive.google.com/drive/folders/1H-d498sbQE0LurYczzB83kG603nGJvOp
 
+For Borland C++ compiler, consider
+https://winworldpc.com/product/turbo-c/3x
+[ looking for around 1992 dates of EXE and supporting LIBs ]
+
+
