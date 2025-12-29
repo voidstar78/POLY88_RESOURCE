@@ -1,0 +1,9 @@
+drive 1 system.pm
+drive 2 games.pm
+drive 3 source.pm
+printer nul
+colors b-white blue white black
+font vga.fnt
+;artc off
+;fpb on
+;match on
