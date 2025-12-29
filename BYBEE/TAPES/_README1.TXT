@@ -1,0 +1,50 @@
+The CAS files in this archive are derived from IMG files supplied by
+Dwight Elvey. Please see the DWIGHT subfolder for complete information.
+Below are Dwight's notes concerning these programs.
+
+
+ This tape has the following files. The same files are duplicated
+on each side of the tape. If one side is damaged or unreadable
+give the other side a try. It is recommended that one make
+copies of this tap. TPERR is useful for making copies.
+ There are two copies of STARTRK these will only work if you have
+the two PROMs for TinyBasic installed. The second one includes
+TinyBasic extended functions of PEEK, POKE and SAVE. Look at the
+DOS file for SAVTBS.PRN to see how these functions work. If you
+have the TinyBasic ROMs installed, you can load this file and start
+a new program by the NEW command. Any future programs will keep
+these fuctions when saved with SAVE.
+
+Format Name          Type           Address     Notes
+ P      SMD         Code             0C6A-       Small Mem Dump
+                                                  See Poly Manual
+ P      BASIC       Code, AutoStart  2000-4A00   See Poly BASIC Manual
+ P      LANDER      BASIC Source      -          BASIC game (game tape #1)
+ P      STOCK       BASIC Source      -          BASIC game (game tape #1)
+ P      REVERSE     BASIC Source      -          BASIC game (game tape #1)
+ P      HAMURABI    BASIC Source      -          BASIC game (game tape #1)
+ P      CASHFLOW    BASIC Source      -          BASIC program
+ P      FORTH       Code, AutoStart  2000-5691   Forth Language
+ P      STARTRK     TBASIC Prog. A-S  -          Used w/ Tiny Basic
+                                                  Load w/ monitor
+ P      ASM         Code             2000-3050   See PC file PASM.TXT
+ P      SERLOAD     Code             0C6A-0C94   Down load image from PC
+                                                  Use w/ POLYWR.COM
+ P      SERDUMP     Code             0C6A-0D9E   Up load image to PC
+                                                  Use w/ POLYUP.COM
+ P      ATPERR      ASM Source        -          for TPERR Prog.
+ P      TPERR       Code             2000-2100   See PC file TPERR.TXT
+ P      ALISTR      ASM Source        -          for LISTR Prog.
+ P      LISTR       Code             0C72-0CAD   See PC file PASM.TXT
+                                                  use w/ ASM only
+ P      STARTRK     TBASIC           -           Same as above but includes
+                                                  Tiny basic extensions of
+                                                  SAVE, PEEK and POKE
+ P      BACKGAM     BASIC Source     -           BASIC game (game tape #2)
+ P      HANGMAN     BASIC Source     -           BASIC game (game tape #2)
+ P      WUMPUS      BASIC Source     -           BASIC game (game tape #2)
+ P      CRAPS       BASIC Source     -           BASIC game (game tape #2)
+
+
+
+
