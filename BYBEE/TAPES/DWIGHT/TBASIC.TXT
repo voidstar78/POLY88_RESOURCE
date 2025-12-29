@@ -1,0 +1,69 @@
+ This is a copy of PROMs that I had in my Poly88.
+The Author is unknown. It is an adaptation of the
+original Tiny Basic modified for the Poly88 S-100 system.
+It is intended to run on the CPU card in the two
+sockets next to the Poly88 monitor. The PROM type
+is 2708. The one immediately left of the monitor
+is in the file TB400.HEX. The next left socket is
+for TB800.HEX. TBASIC.LST is a disassembly that
+has comments added from a listing of Tiny Basic
+found in one of the books.
+ Tiny Basic on the Poly88, requires that there be
+RAM starting at 2000H. This RAM is not the RAM that
+is found on the CPU card. It is user supplied RAM.
+A maximum of 8K is used for program space.
+ To start Tiny Basic, one can enter control C
+or use the monitor to start at 400H.
+ Here is a list of the commands that I know of:
+ LIST
+ NEW
+ RUN
+ NEXT
+ IF
+ GOTO
+ GOSUB
+ RETURN
+ REM
+ FOR
+ INPUT
+ PRINT
+ STOP
+ RND
+ ABS
+ SIZE
+ TO
+ STEP
+ 0>=
+ #   ( NOT = ) or field size for print
+ >
+ =
+ <=
+ <
+ *
+ +
+ -
+ /
+,
+;
+ All math is integer. There variables are single letter.
+There is one array called @. Example:  LET @(1) = 5
+The command LET is understood so the sequence @(1)=5
+is also valid. All commands can be abreviated. Example:
+P.@(1) will print the value in the array location 1.
+ This version had a way of connecting user functions.
+I have figured this out and have make extensions to be
+able to save a program and added the functions PEEK and
+POKE. Once a program is saved with the SAVE command,
+one can load using the monitor loader and it will auto-
+start Tiny Basic with that program loaded. One can
+then type RUN to execute it. STARTRK is just such a
+program. You can clear this with NEW and write another
+and still use the SAVE. You must first load a program
+that has SAVE before entering a program that you
+will expect to save. This is because these extensions
+are not a perminent part of the ROM Tiny Basic.
+ See the *.PRN list file for how to use these new
+commands.
+Dwight
+        
+         

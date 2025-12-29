@@ -1,0 +1,109 @@
+
+         TPERR  by DK Elvey
+ TPERR is a tape copy program. It will copy most all
+of the formats that I know of. It loads at 2000H and
+one can start it at 2000H. It will prompt for a format
+type, P or B. Make sure that the cassette interface is
+selected for the right format and that the phase is
+correct for P format. I have 2 switches on my interface
+to select these. After typing P or B, it will prompt
+for a file name. A return at the end will start it
+searching. If the cassette is manual, start it now.
+Make sure that you start the tape before the first record
+of the file to be copied. This program doesn't know
+how to arrange partial file fragments. If you start in
+the middle, you will need to rewind and start at 2000H
+again.
+ If there is a read error, it will display a ? and then
+the record that failed. After the last record, you can use
+the monitor to patch the bad data. You must be familiar with
+the data format to do this. If you want to try again, you
+must restart the program from 2000H to get a clean image
+in memory. Sometimes, adjusting the volume or any tone
+control will help. Unlike the monitor, this program will
+continue after an error. This makes adjusting the play
+easier since you can hunt until you get it right as
+long as the files are long enough.
+  Once you get a clean image, the program will sequence
+to the write phase. You should disconnect the speaker out
+cable from the recorder. Noise on this lead can cause troubles
+with the write phase. You again select P or B. This starts
+the tone. Now start the cassette on record. It will wait
+for an ENTER and then output the file read during the first
+phase.
+ When the write is complete, it will prompt again for
+the next file to read.
+ If there was an error that you corrected from the
+monitor, you can write the image in memory out by starting
+at 2102H. This skips the read phase and writes the image
+found in memory. It starts at the write P prompt.
+ A number of other things can be done while you have
+the image in memory.
+ One could modify the END record to be an AUTO-START
+by changing the END record type to 3 and setting the start
+address.
+ Another thing this program is good for is looking at
+the header information on files that you don't know what
+they are for. If you tell it to read a file name that
+doesn't exit, it will display the headers of each record
+it finds on the tape. The inforamtion could include
+start addresses of unknown programs or the type of file.
+ If it is code, the first address is usually the
+start address to begin the program. This is handy if you
+forgot the start address for a particular program.
+ The TPERR program will display the header in the following
+format:
+
+ FileName Record# RecordLength Address RecordType
+
+FileName = one to 8 characters.
+Record# = a 16 bit value
+RecordLength = a byte value. 00 is 100H
+Address = the 16 bit load address for absolute records.
+RecordType = a byte value:
+    00 Absolute
+    01 Comment
+    02 End
+    03 Auto Start @ Address
+    04 Data ( used by Assembler )
+    05 BASIC program file
+    06 End ( used by Assembler? )
+
+Other information one needs to know in order to edit records
+in memory:
+1. The records are kept in memory with header information
+for each record.
+2. The header information takes 0EH bytes.
+3. The header contains the record length. Use this information
+to skip the the beginning of the next record. The length is
+at offset of 0AH.
+4. The image buffer starts at 2300H.
+
+Example of making a BASIC auto run from a source that you have saved.
+I will use the game BACKGAM as an example:
+
+1. Load TPERR using the front panel reset.
+2. Start TPERR by entering the monitor ( ^Z ). Then "SPJ2000<sp>G"
+ At the prompt enter P and then the name BACKGAM.
+3. Start the tape with the speaker connector installed.
+4. When the last record is read it will do two CR's and prompt
+ for a type. Look at the last record. In my case it was:
+       BACKGAM 0011 74 1000 05
+ This was the last record before the end record.
+5. I then modify the last record in memory.
+    11h * 10Eh + 74h + 231Bh = 357D  ( 11h and 74h from record )
+6. Start the monitor by ^Z. Type:
+     L357D<sp>03<sp>SPJ2102<sp>G
+7. Type P and start the recorder with the Poly record connected
+ to the tapes record, using the new tape to record on. After
+ the recorder is past the leader, type <return>.
+8. Stop the record at the end.
+9. If this were a code tape, you'd need to set that start address
+ as well. Assuming that the above was such a file and the start
+ was at 2000h ( typical ), you'd type:
+    L357B<sp>J2000<sp>03<sp>SPJ2102<sp>G
+ Note that the location of the start address is 2 before the type.
+  In the formula, replace 231Bh with 2319h.
+
+
+

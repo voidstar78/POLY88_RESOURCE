@@ -1,0 +1,109 @@
+
+   POLYUP is a logging file for use with the programs,
+ SERDUMP or LISTR ( Used with ASM ). Type POLYUP
+ without parameters to get command line help.
+  Once POLYUP has started, it will automatically close the
+ output file when the last record is received.
+
+ Have SERDUMP loaded on the Poly-88 by using the monitor.
+Have the serial line of the Poly88 connected to the PC
+serial COM port.
+
+ To use SERDUMP do the following:
+
+  SPJ0C6A
+  GP
+  FileName
+  StartAddr
+  EndAddr
+
+ The FileName is not used so any name is OK.
+ The StartAddr will usually be 2000 if saving with
+  TPERR ( recommended if intending to restore to a tape
+  later )
+ The EndAddr must be calulated if saving as a tape
+  image, since one need the tape image plus TPERR
+  saved ( see below ).
+
+ Make sure to start the program on the PC before typing
+the enter after EndAddr. Entering the EndAddr starts the
+serial out at the Poly88 side.
+
+Here is how to use TPERR and SERDUMP to save a tape image:
+
+ First load each tape into memory with the monitors loader
+from tape.
+
+ Next we must read the tape we using TPERR instead of the
+monitor since we want aan image with the headers as well
+as the data in RAM. Run TPERR by:
+
+  SPJ2000
+  G
+  P ( or B for byte )
+  FileName
+
+ The P or B must match recorded type of the tape and the
+FileName must match the records you wish to save. Once it
+is read, the program will step to the tape writing routine.
+Break the program here and then start SERDUMP and POLYUP
+as described above, with the calculated address( see example
+below ).
+
+ As an example, I want to save the tape file CRAPS to the PC
+disk. I first load SERDUMP from tape, using the monitor. I then
+load TPERR using the monitor again. I start TPERR at 2000H.
+I use it to read the tape containing CRAPS. On the last record
+of CRAPS, TPERR will do two <CR>'s.
+ Write down the information on the last line. For CRAPS it
+looked like:
+
+  CRAPS 0012 ED 1200 05
+
+0012 is the number of 100h records
+ ED is the length of the last record.
+ 1200 would be the start address if it were a binary type
+ 05 is the record type
+
+ Record these numbers down and stop TPERR and go back to the
+monitor by ^Z.
+ We need to calculate the size of TPERR plus the data from CRAPS.
+We know that each record has a 0Eh overhead and that there is
+one last record of zero data lengths not displayed ( the end record ).
+We multiply the number 0012h times 010Eh to get the first part.
+
+To this we add the EDh for the last record and 0Eh for its overhead.
+We add another 0Eh for the end record with no data field.
+We then add 2300h for the location in memory that TPERR
+placed these records.
+12h * 10E = 12FCh     size of all full data records
+12FC + 0ED = 13E9h    Plus last partial data record
+13E9 + 0E = 13F7      plus its header
+13F7 + 0E = 1405      plus the end record
+1405 + 2300 = 3705h   EndAddr
+
+ If your math was correct, the number should be
+3705h, for this tape.
+ Connect the serial cable from the serial interface to the PC.
+Using the monitor start SERDUMP at 0C6Ah. Type P and any letter
+as a dummy file name ( I used a hand modified SMD for this program ).
+On the next line, type 2000 ( TPERR's start ) then 3705h ( the
+number we just calculated.
+ Example:
+ SPJ0C6A
+ G
+ P
+ 2000
+ 3705
+ Before typing a CR on this last line, type POLYUP CRAPS.IMG <CR>
+on the PC to start the program.
+ 
+Now type the CR on the poly-88. If all is working well, you should
+see a series of ... showing progress.
+ On the PC, the default is COM1. If you use COM4, you should have
+typed POLYUP CRAPS.IMG 4 <CR>.
+
+
+Dwight Elvey 6/18/2011
+
+

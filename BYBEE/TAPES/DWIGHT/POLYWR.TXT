@@ -1,0 +1,45 @@
+revised June 2011 Dwight Elvey
+
+ POLYWR.COM
+  This program is used to transfer raw information to
+ the Poly-88. It is typically used with SERLOAD on the
+ Poly side. It can be used to transfer binary or ascii.
+ As usual with my files, type the command without
+ parameters for the command line help.
+  There is a 'chicken and egg' problem here. If you are
+ starting with a new system with no tapes, you'll need
+ to bootstrap the system up. To do this, you should enter
+ SERLOAD by hand with the monitor. I have the HEX at the
+ end of this file. I will assume that you have entered this
+ by hand and this is the first file you are loading from
+ the PC to the POLY-88.
+  Connect the serial wire between the PC and the POLY-88's
+ serial adapter. Start SERLOAD at 0C6A. There will be no
+ immediate indication that it is running. Start POLYWR
+ on the PC with:
+
+ POLYWR 2000 SERLOAD.IMG <cr>
+
+ The progress will be indicated by ...'s. When done,
+ the Poly-88 will have a <cr> displayed. The image of
+ the TPERR and SERLOAD are now in memory. You can use
+ TPERR to write out the SERLOAD to the tape by starting
+ at 2102h and entering P or B to select tape record type.
+ Make sure to have the tapes input connected to the
+ proper lead of the tape interface and start the record.
+ Enter a <cr> will now write out the file to the tape.
+  It would be a good idea to read the tape back now,
+ using the monitor. You can now use this tape to recover
+ the rest of the image files from the PC.
+
+ SERLOAD  @ 0C6A
+
+ 0C6A  CD AD 02 1B AA 40 CE 00
+ 0C72  3E 36 D3 01 21 54 0C 0E
+ 0C7A  09 36 41 23 0D C2 7B 0C
+ 0C82  36 20 21 FF FF 22 0A 0C
+ 0C8A  CD 28 0C CD FE 02 C3 8A
+ 0C92  0C 00 -- -- -- -- -- --
+
+
+

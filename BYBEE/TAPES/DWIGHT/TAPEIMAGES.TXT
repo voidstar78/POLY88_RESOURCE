@@ -1,0 +1,53 @@
+
+A general over view of the files for the Poly88.
+This is a number of programs that are used to
+save tape images from the Poly88 to a PC or to
+transfer tape images from the PC to the poly88
+to write to tapes.
+ On the PC side are two programs, POLYUP.COM and
+POLYWR.COM. These are intended to be used from
+DOS. If using a Windows, and a DOS window, it
+my still interfer with the transfer.
+ The source files are included as POLYUP.SEQ
+and POLYWR.SEQ. These are written in the Forth
+language. They may take some learning if one
+wants to rewrite these into some other language
+as 'C' or othe language of choice.
+ POLYWR.COM is used to transfer image information
+to the POLY88 through the original serial port.
+The Poly88 side must have SERLOAD in the
+Poly88 memory running. The file POLYWR.TXT has
+the bytes that can be entered the first time
+to get the system bootstraped. This program
+should be saved to tape to use in the future.
+This should be done with TPERR since the SMD
+provided by the Poly88 manual is to be loaded
+at the same location.
+ When images are saved to the PC, they have
+the binary of TPERR at the begining of each
+image. The is done this way because TPERR has the
+routines in it to write the image file format
+into the tape format used by the monitor.
+ Tapes created by TPERR can then be used as normal
+tapes on the Poly88.
+ Saving tape images from the Poly88 to the PC is done
+with POLYUp.COM, the tape SERDUMP and TPERR. This
+is described in POLYUP.TXT. SERDUMP will send a
+block of memory from the Poly88s memory to the PC.
+In order to save a tape image it is necessary to
+calculate the size of the image as described in
+the file POLYUP.TXT. When using SERDUMP to save
+images, it is also necessary to send then up with
+TPERR attached, although, SERDUMP could be used
+stand alone to save a binary of something like the
+monitor ROM.
+ To transfer images, TPERR is first used to read
+tapes into memory. It reads and saves into RAM
+not only the data but also the record headers. These
+can then be used when creating a tape from the images
+saved. Please read POLYUP.TXT for instructions on
+using these programs to save images.
+ TPERR can also be used to replicate tapes without
+using SERDUMP.
+
+Dwight Elvey 6/18/2011

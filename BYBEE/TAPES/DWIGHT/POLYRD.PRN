@@ -1,0 +1,53 @@
+
+
+
+                ; POLYRD  THIS IS THE PROGRAM TO EXCEPT DATA FROM AN EXTERNAL
+                ;          SERIAL SOURCE. IT USES PARTS OF THE ORIGINAL POLY
+                ;          LOADER SO IF THERE IS AN ERROR (?) IT MUST BE RESTARTED
+                ;          FROM THE BEGINNING. IT EXPECTS SERIAL DATA AT 2400
+                ;          BAUD FROM THE PC. THE DATA WILL HAVE THE SAME FORMAT
+                ;          AS RECORDS FROM TAPE. EACH RECORD CAN HAVE A MAXIMUM
+                ;          OF 256 DATA BYTES. SEE POLY MANUAL FOR FORMAT.
+
+ 02FE =         HEAD7   EQU     02FEH
+ 0C54 =         FNAME   EQU     0C54H
+ 038D =         CROUT   EQU     038DH
+ 0C24 =         WH1     EQU     0C24H
+ 0C28 =         WH2     EQU     0C28H
+ 02AD =         SETUP   EQU     02ADH
+ 0C0A =         RBUFF   EQU     0C0AH
+
+ 0C6A                 ORG     0C6AH
+                ; SET UP ASYCH SERIAL FOR 9600 BAUD 8 BIT NO PARITY.
+                POLYRD:
+ 0C6A CDAD02          CALL    SETUP
+                ;        DB      01FH  ; SER PORT, 9600 W/ X16
+                ;        DB      01DH  ; SER PORT, 4800 W/ X16
+ 0C6D 1B              DB      01BH  ; SER PORT, 2400 W/ X16
+                ;        DB      019H  ; SER PORT, 1200 W/ X16
+ 0C6E AA              DB      0AAH  ; DUMMY SYNC
+ 0C6F 40              DB      040H  ; RESET USART
+ 0C70 CE              DB      0CEH  ; 11001110 2 STOP, NO PARITY, 8 BITS & X16
+ 0C71 00              DB      0
+
+                ; LOAD DATA RECORDS UNTIL END.
+ 0C72 3E36            MVI     A,036H  ; 00110110  RTS, DTR, REC-EN
+ 0C74 D301            OUT     1
+ 0C76 31540C          LXI     M,FNAME
+ 0C79 0E09            MVI     C,9
+                ANAME:               ; BUILD A DUMMY FILE NAME TO USE IN HEADERS
+ 0C7B 3641            MVI     M,'A'
+ 0C7D 23              INX     H
+ 0C7E 0D              DCR     C
+ 0C7F C27B0C          JNZ     ANAME
+ 0C82 3620            MVI     M,20H
+ 0C84 21FFFF          LXI     H,-1
+ 0C87 220A0C          SHLD    RBUFF   ; CLEAR ANY EARLY CHAR.
+ 0C8A CD280C          CALL    WH2
+                RDDAT:
+ 0C8D CDFE02          CALL    HEAD7   ; READY TO GO
+ 0C90 C38D0C          JMP     RDDAT
+ 0C93                 END
+
+
+

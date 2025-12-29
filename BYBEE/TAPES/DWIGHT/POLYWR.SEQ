@@ -1,0 +1,298 @@
+\ PolyWr   Used to down load a binary file to the
+\           Poly-88 through the serial port. One must
+\           first start the PolyRd by loading, POLYRD
+
+decimal
+
+$3F8 CONSTANT Com1
+$2F8 CONSTANT Com2
+$3E8 CONSTANT Com3
+$3F8 CONSTANT Com4
+
+Com1 VALUE ComPort  \ Sets active com port
+
+DECIMAL
+
+: RecBuf@ ( - Char )
+  \ Used to read characters from the serial port
+  ComPort PC@ ;
+
+: TransBuf! ( Char - )
+  \ Used to send a character to the serial port
+  ComPort PC! ;
+
+: Register@ ( Reg# - )
+   CREATE C,
+   ( - Val )
+   DOES> C@ ComPort + PC@ ;
+
+: Register! ( Reg# - )
+   CREATE C,
+   ( Val - )
+   DOES> C@ ComPort + PC! ;
+
+1 Register@ IntrEn@        1 Register! IntrEn!
+2 Register@ IntrID@
+3 Register@ LineCtrl@      3 Register! LineCtrl!
+4 Register@ ModemCtrl@     4 Register! ModemCtrl!
+5 Register@ LineStat@
+6 Register@ ModemStat@     6 Register! ModemStat!
+7 Register@ Scratch@       7 Register! Scratch!
+
+\ LineCtrl Constants
+$80 CONSTANT DLAB
+$40 CONSTANT SetBreak
+$20 CONSTANT StickParity
+$10 CONSTANT EvenParity
+$08 CONSTANT ParityEnable
+$04 CONSTANT STBMsk
+$03 CONSTANT WLSMsk
+
+\ ModemCtrl
+$10 CONSTANT ModLoop
+$08 CONSTANT ModOut2 \ This bit must be set to a one to enable
+                     \  interrupts to the bus. If more than one
+                     \  Uart share this interrupt line, one must
+                     \  have only one of these enabled at a time
+                     \  This can be done with a fast timer interrupt.
+$04 CONSTANT ModOut1 \ Not normally used
+$02 CONSTANT RTS
+$01 CONSTANT DTR
+
+\ LineStat
+$40 CONSTANT EmptyTransReg
+$20 CONSTANT EmptyTransHold
+$10 CONSTANT BreakFlag
+$08 CONSTANT FrameError
+$04 CONSTANT ParityError
+$02 CONSTANT OverrunError
+$01 CONSTANT RecDataFlag
+FrameError ParityError OR OverrunError OR  CONSTANT  UartError
+
+\ ModemStat
+$80 CONSTANT RLSD\
+$40 CONSTANT RI\
+$20 CONSTANT DSR\
+$10 CONSTANT CTS\
+$08 CONSTANT xRLSD  \
+$04 CONSTANT xRI     \  Trailing edge of ring
+$02 CONSTANT xDSR     \
+$01 CONSTANT xCTS      \ All x are Delta or Change indicators
+
+\ IntrEn
+$08 CONSTANT ModemStatIntr
+$04 CONSTANT LineStatIntr
+$02 CONSTANT TxIntr
+$01 CONSTANT RecIntr
+
+
+: Mask ( Flag Mask - Flag.Msk Msk )
+    TUCK AND SWAP ;
+
+: BAUD ( Rate - )
+  \ Rates 50 TO 56000 Baud
+  \ 115200 Baud needs to be done by setting divisor to 1
+   115200. ROT UM/MOD
+   ( DisIntr )   \ When serial is interrupt driven
+   LineCtrl@ DLAB OR LineCtrl!
+   SPLIT
+    ComPort 1+ PC!
+    ComPort PC!
+   LineCtrl@ DLAB XOR LineCtrl!
+   ( ?EnIntr )    \ When serial is interrupt driven
+   DROP ;
+
+: 2OR ( Val1 Msk1 Val2 Msk2 - Val' Msk' )
+  \ Applies mask to values and combines Mask
+    Mask 2SWAP Mask
+    ROT OR >R OR R> ;
+
+: MaskLineCtrl! ( Val Mask - )
+    DUP>R AND
+    R> -1 XOR
+    LineCtrl@ AND OR LineCtrl! ;
+
+: StopBits ( 1or2 - Flag STBMsk )
+   2 = STBMsk ;
+
+: WordLen ( 5to8 - Val Mask )
+   5 - WLSMsk ;
+
+: ComErr? ( - Flag )
+   \ Error messages can be expanded from the bits
+   LineStat@ UartError AND 0<> ;
+
+: THEmpty? ( - Flag )
+   \ Empty holding register means one can send another char
+   LineStat@ EmptyTransHold AND 0<> ;
+
+: DataRdy? ( - Flag )
+  \ receive character is ready
+   LineStat@ RecDataFlag AND 0<> ;
+
+: Data! ( Char - )
+ \ Used for most serial out because it checks for empty
+   BEGIN THEmpty? UNTIL
+   TransBuf! ;
+
+: InitComPort  ( SerRate - )
+    FALSE ModemCtrl!
+    Baud
+    8 WordLen
+    2 StopBits 2OR
+    0
+\    [ ParityEnable EvenParity OR SetBreak OR StickParity OR DLAB OR ]
+    [ SetBreak StickParity OR DLAB OR ]
+    LITERAL 2OR
+    MaskLineCtrl! ;
+
+handle DataFile
+create DataBuf $100 allot
+
+: MyQuit
+\FPC   QUIT
+\TCOM  BYE
+   ;
+
+: InputError
+   cr ." Used:   POLYWR Address file.BIN [COM] " cr
+      ."         Address must be hex. " cr
+      ."         Optional COM port 1 to 4. " cr
+      ."         Default COM1
+      ."          Example: POLYWR 2000 MYFILE.BIN " cr
+      ."         Down loads file to Poly-88 " cr
+   MyQuit ;
+
+0 value Addr
+
+create ComTable
+   $3F8 , $2F8 , $3E8 , $3F8 ,
+
+: Num1 ( Char - Val+$30 )
+   dup ascii A ascii G within
+   over ascii a ascii g within or
+   if
+      dup ascii G >
+      if
+        $20 -
+      then
+        $7 -
+    else
+        here count type
+        cr ." Not Hex a number? " cr MyQuit
+    then ;
+
+: Number ( Addr - Val )
+    dup 1+ 0
+    rot c@ 0
+    ?do
+        $10 *
+        over c@
+        dup ascii 0 ascii : within 0=
+        if
+          Num1
+        then
+        $30 - +
+        swap 1+ swap
+    loop
+    swap drop ;
+
+: SetPort
+   bl word c@
+   if
+    here Number 1-
+    dup 0 4 within 0=
+    if
+     decimal
+     cr 1+ . ."  is not a COM port? " cr
+     MyQuit
+    then
+    2* ComTable + @
+    =: ComPort
+   then ;
+
+: OpenDataFile ( - )
+   hex bl word c@ 0=
+     if InputError then
+     here Number =: Addr
+   bl word c@ 0=
+    if InputError then
+   here DataFile $>HANDLE
+   DataFile hopen
+   if
+     cr ." Can't open file: "
+        DataFile count type ."  ?" cr
+     MyQuit
+   then
+   SetPort ;
+
+: FillBuffer ( - Cnt )
+    DataBuf $100 DataFile hread ;
+
+0 value CS
+0 value Record#
+
+: SendChar
+    dup +!> CS
+    Data! ;
+
+: BuildHeader ( Cnt - Cnt )
+    $0E6 SendChar
+    $001 SendChar
+    0 =: CS
+    8 0 do ascii A SendChar loop \ dummy header
+    Record# $100 /mod swap SendChar SendChar
+    dup SendChar \ Length
+    Addr $100 /mod swap SendChar SendChar
+    0 SendChar \ Type
+    CS negate SendChar ;
+
+: EndRecord ( - )
+    5 0 do $0E6 SendChar loop
+    $001 SendChar
+    0 =: CS
+    8 0 do ascii A SendChar loop \ dummy header
+    Record# $100 /mod swap SendChar SendChar
+    0 SendChar \ Length
+    Addr $100 /mod swap SendChar SendChar
+    2 SendChar \ Type
+    CS negate SendChar ;
+
+: SendData ( Cnt - )
+    0 =: CS
+    DataBuf over 0 ?do
+\       i 7 and 0= if cr then \ debug
+       dup c@
+\       dup $0FF and 3 .r ;  \ will be serial send
+       SendChar
+       1+
+    loop
+    CS negate SendChar
+    drop
+    +!> Addr
+    1 +!> Record#
+    ascii . emit ;
+
+: PolyWr
+    Com1 =: ComPort  \ Sets active com port
+    OpenDataFile
+    2400 InitComPort
+\    9600 InitComPort
+    FillBuffer
+    dup 0=
+    if
+      cr DataFile count type ."  is empty?" cr
+      MyQuit
+    then
+    0 =: Record#
+    begin
+      Record# $0F and 0= if cr then
+      BuildHeader
+      SendData
+      FillBuffer dup 0=
+    until
+    drop
+      EndRecord
+      cr ." Finished Down Loading file." cr ;
+
+
