@@ -1,0 +1,21 @@
+Dear Subscriber,
+
+Thank you for ordering the July/August 1983 Disk Of The Month!
+
+This disk contains the following programs:
+
+COUNT.GO Counts the number of words in a+text file. (This is
+	an older, simpler version of the PolyLetter 2.0 COUNT
+	program. Enter COUNT filename.)
+
+CONTROL-U.GO Once installed, pressing control-U will dump the
+	current contents of the screen to a printer. Type
+	CONTROL-U <cr> to load this utilntext file. (This is
+	an older, simpler version of the PolyLetter 2.0 COUNT
+	program. Enter COUNT filename.)
+
+CONTROL-U.GO Once installed, pressing control-U will dump the
+	current contents of the screen to a printer. Type
+	CONTROL-U <cr> to load this utility.
+
+PolyLetter

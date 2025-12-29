@@ -1,0 +1,41 @@
+Dear Subscriber,
+
+This disk contains programs written by many different people.
+Most of them are self-explanatory, but some may need a bit of
+tutoring.
+
+
+1) POP.GO will change a system file to a non-system file and
+vice-versa.
+		$POP <3>TESTFILE
+
+
+2) SZAP.GO  Put in a backup disc and go to town. To look at
+the directory on disk 2 type:
+$ENABLE
+$$SZAP
+When it comes up, read the directions, then type:
+:2
+and a RETURN. You will be looking at the directory. Type ESC
+and the ASCII equilivent will show up on the right. Scan
+through the disc by hitting RETURN.  Back up with LINE FEED.
+
+A detailed writeup on this program appeared in the November/
+December 1981 issue of PolyLetter.
+
+
+3)MOVE.BS  A free suprise program!!  By Donald Moe, it will
+move data from one disc to another.  Tell it the starting 
+address and how many sectors.  Very useful if you have a
+destroyed directory.
+
+4)COPYALL.BS  Will move all non-system files to another disk.
+
+5)COPY-SUB-DIR  The same but will work only from a subdirectory
+
+For the other programs, type them in and go.
+
+
+Thank you!
+
+PolyLetter
