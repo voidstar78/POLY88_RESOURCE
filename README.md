@@ -8,6 +8,6 @@ Both systems share CPU, RAM, and video cards.
 
 
 BYBEE folder is submitted archive collection by Bob ByBee (an original contemporary "power user" of the **POLY-8813** system), as provided in Summer 2025.
-This includes his PM.EXE (Polymorphic Systems) emulator that supports a -88 command line argument to be more POLY-88 compatible; the emulator supports a number of cassette and disk image formats).
+This includes his PM.EXE (Polymorphic Systems) emulator that supports a -88 command line argument to be more POLY-88 compatible; the emulator supports a number of cassette and disk image formats).  This emulator is for MS-DOS / x86 compatible systems.
 
 
