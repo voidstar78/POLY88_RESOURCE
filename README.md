@@ -1,4 +1,5 @@
-Resources of information related to the **POLY-88** (from 1976) and **POLY-8813** system (introduced in 1977).
+Resources of information related to the **POLY-88** (from 1976) 
+and the **POLY-8813** system (introduced in 1977).
 
 The POLY-88 was a cassette-tape storage based Intel 8080 / S-100 bus based system.
 
