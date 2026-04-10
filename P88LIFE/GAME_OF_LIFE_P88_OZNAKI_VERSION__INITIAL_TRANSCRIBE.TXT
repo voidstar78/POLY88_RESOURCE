@@ -1,0 +1,119 @@
+								VDM = F800
+								VDMU = F8
+								ALIVEC = AA
+								DEADC = 7F
+3000		21 00 FC			CLEAR:		LXI H,VDM+400
+3003		3E F7							MVI A,VDMU-1
+3005		36 7F				BLANK:		MVI M,DEADC
+3007		2B								DCX H
+3008		BC								CMP H
+3009		C2 05 30						JNZ BLANK
+300C		E5					READY:		PUSH H
+300D		01 C0 FF						LXI B,FFC0
+3010		11 40 00						LXI D,40
+3013		4E					READIN:		MOV C,MOV
+3014		7E								MOV A,M
+3015		70								MOV M,0
+3016		CD 20 0C						CALL WH0
+3019		71								MOV M,C
+301A		0E C0							MVI C,C0
+301C		FE 4E							CPI "N"
+301E		CC 97 30						CZ NORTH
+3021		FE 53							CPI "S"
+3023		CC 99 30						CZ SOUTH
+3026		FE 45							CPI "E"
+3028		CC 9B 30						CZ EAST
+302B		FE 57							CPI "W"
+302D		CC 9D 30						CZ WEST
+3030		FE 4B							CPI "K"
+3032		CC 9F 30						CZ KILL
+3035		FE 4C							CPI "L"
+3037		CC A2 30						CZ LIVE
+303A		FE 43							CPI "C"
+303C		CA 00 30						JZ CLEAR
+303F		FE 48							CPI "H"
+3041		CC B1 30						CZ ONEGEN
+3044		FE 47							CPI "G"
+3046		C2 13 30						JNZ READIN
+3049		E1								POP H
+304A							LIFE:
+304A		AF					NO:			XRA A
+304B		86								ADD M
+304C		09								DAD B
+304D		86								ADD M
+304E		23								INX H
+304F		86								ADD M
+3050		23								INX H
+3051		86								ADD M
+3052		19								DAD D
+3053		86								ADD M
+3054		19								DAD D
+3055		86								ADD M
+3056		2B								DCX H
+3057		86								ADD M
+3058		2B								DCX H
+3059		86								ADD M
+305A		23								INX H
+305B		09								DAD B
+305C		E6 07							ANI 7
+305E		FE 06							CPI 6
+3060		C4 88 30						CNZ MARK
+3063		7C								MOV A,H
+3064		E6 04							ANI 4
+3066		CA 4A 30						JZ NO
+3069		CD A5 30						CALL DELAY
+											;;BIRTH DEATH AGONY
+306C		2B								DCX M
+306D		7E								MOV A,M
+306E		B7								ORA A
+306F		CC A2 30						CPE LIVE
+3072		E4 9F 30						CPO KILL
+3075		7C								MOV A,H
+3076		FE F7							CPI VDMU-1
+3078		C2 6C 30						JNZ C1
+											;;DELAY
+307B		CD A5 30						CALL DELAY
+											;;DISPLAY
+307E		3A 0C 0C						LDA KBUFF
+3081		B7								ORA A
+3082		CA 0C 30						JZ READY
+3085		C3 4A 30						JMP LIFE
+3088		FE 01				MARK:		CPI 1
+308A		CA 92 30						JZ LMARK
+308D		3E 7F				DMARK:		MVI A,DEAD
+308F		A6								ANA M
+3090		77								MOV M,A
+3091		C9								RET
+
+3092		3E 80				LMARK:		MVI A,LIVEMARK
+3094		B6								ORA M
+3095		77								MOV M,A
+3096		C9								RET
+3097		09					NORTH:		DAD B
+3098		C9								RET
+3099		19					SOUTH:		DAD D
+309A		C9								RET
+309B		23					EAST:		INX H
+309C		C9								RET
+309D		2B					WEST:		DCX H
+309E		C9								RET
+309F		36 7F				KILL:		MVI M,DEADC
+30A1		C9								RET
+30A2		36 AA				LIVE:		MVI M,ALIVEC
+30A4		C9								RET
+30A5		C5					DELAY:		PUSH B
+30A6		47								MOV B,A
+30A7		05								DCR B
+30A8		0B					DELOOP:		DCX B
+30A9		B8								CMP B
+30AA		C5								PUSH B
+30AB		C1								POP B
+30AC		C2 A8 30						JNZ DELOOP
+30AF		C1								POP B
+30B0		C9								RET
+30B1		21 0C 0C			ONEGEN:		LXI H,KBUFF
+30B4		34								INR M
+30B5		23								INX H
+30B6		34								INR M
+30B7		3D								DCR A
+30B8		C9								RET

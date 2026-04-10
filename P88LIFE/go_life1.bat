@@ -1,0 +1,1 @@
+as\bin\asl.exe 01_GAME_OF_LIFE_8080_ASM_CODE.TXT -cpu 8080 -L

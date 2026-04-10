@@ -1,0 +1,344 @@
+; LIFE WITH GRAPHICS CURSOR FOR 4.0 MONITOR ROM
+
+2000          ORG     2000H
+2E00          TADD1   EQU     2E00H
+0C20          WH0     EQU     0C20H
+002E          TAD1    EQU     2EH
+F800          VADD    EQU     0F800H       ; VIDEO BLOCK ADDRESS
+0C0C          KBUF    EQU     0C0CH        ; KEYBOARD INPUT BUFFER ADDRESS
+2400          MADD    EQU     2400H        ; MASTER COPY ADDRESS
+2900          SADD    EQU     2900H        ; SLAVE COPY ADDRESS
+0024          MAD     EQU     24H          ; 1ST BYTE OF MADD
+0029          SAD     EQU     29H          ; 1ST BYTE OF SADD
+0040          LINE    EQU     64           ; LINE LENGTH
+2308          TADD    EQU     2308H        ; TABLE (MASK & SCRATCH)
+0023          TAD     EQU     23H          ; 1ST BYTE OF TADD
+2280          CADD    EQU     2280H        ; COUNT ADDRESS (GENERATIONS)
+2000 C31E21   JMP     SETUP                ; START OF GRAPHICS CURSOR
+2003 210823   LXI     H,TADD               ; SET UP MASK TABLE
+2006 3E20     MVI     A,20H                ; FIRST MASK FOR TABLE
+2008 0E08    MASK:    MVI C,08H            ; GETS EIGHT SPOTS
+200A 77      TABLE:   MOV M,A
+200B 23       INX     H
+200C 0D       DCR     C
+200D C20A20   JNZ     TABLE             ;IN TABLE.
+2010 0F       RRC                       ;THEN MASK FOR NEXT LOWER BIT
+2011 D20820   JNC     MASK              ;GETS THE NEXT EIGHT.
+2014 210029   LXI     H,SADD            ;SAVE SLAVE ADDRESS
+2017 E5       PUSH    H                 ;FOR USE IN LOOP
+2018 218022   LXI     H,CADD            ;LOAD CADD WITH OWN
+201B 3680     MVI     M,80H             ;SECOND BYTE TO START COUNT.
+201D 21C0F7   LXI     H,VADD-40H        ;SET UP FOR SWAP FROM
+2020 11C028   LXI     D,SADD-40H        ;SCREEN TO SLAVE WITH SLOP.
+2023 C3DC20  LOOP:    JMP KBDTST
+2026 7E      CONTIN:  MOV A,M
+2027 2F       CMA                       ;COMPLEMENT FOR TRUE LIFE
+2028 12       STAX    D                 ;STORE ON OTHER COPY.
+2029 23       INX     H                 ;NEXT
+202A 13       INX     D                 ;SPOT.
+202B 7C       MOV     A,H               ;CHECK
+202C E607     ANI     7                 ;LAST THREE BITS OF 1ST BYTE
+202E FE05     CPI     5                 ;FOR END
+2030 C22320   JNZ     LOOP              ;OF COPY PLUS SLOP.
+2033 21C028   LXI     H,SADD-40H        ;SWAP SLAVE
+2036 11C023   LXI     D,MADD-40H        ;TO MASTER
+2039 7E      SWAP:    MOV A,M
+203A 12       STAX    D
+203B 23       INX     H
+203C 13       INX     D
+203D 7C       MOV     A,H
+203E FE2E     CPI     SAD+5             ;WITH SLOP
+2040 C23920   JNZ     SWAP              ;UP TO HERE.
+2043 118022   LXI     D,CADD            ;SET UP FOR COUNT
+2046 0128F8   LXI     B,VADD+28H        ;IN UPPER RIGHT OF SCREEN
+2049 218022   LXI     H,CADD            ;WATCH THE ZERO AND CARRY!!
+204C 6B       MOV     L,E
+204D 23      COUNT:   INX H             ;NEXT SIGNIFICANT DIGIT
+204E 0B       DCX     B                 ;NEXT DOWN ON SCREEN
+204F C25320   JNZ     NOINC             ;ZERO FLAG TO INCREMENT
+2052 34       INR     M
+2053 1A      NOINC:   LDAX D            ;ARE WE TO END
+2054 BD       CMP     L                 ;OF COUNT (STORED AT CADD)?
+2055 DA5E20   JC      REP               ;YES
+2058 3EBA     MVI     A,0BAH            ;NO, CHECK FOR
+205A BE       CMP     M                 ;DECIMAL CARRY IN ASCII.
+205B C26120   JNZ     HERE              ;NO
+205E 3EB0    REP:     MVI A,0B0H        ;YES, ZERO THAT DIGIT
+2060 77       MOV     M,A               ;AND REPLACE MEMORY.
+2061 7E      HERE:    MOV A,M           ;GET MEMORY
+2062 02       STAX    B                 ;AND VIEW IT
+2063 D24D20   JNC     COUNT             ;UNTIL ALL DIGITS ARE VIEWED.
+2066 2B       DCX     H                 ;CHECK MOST SIGNIFICANT DIGIT
+2067 BE       CMP     M                 ;AGAINST NEXT MOST.
+2068 CA6D20   JZ      THERE             ;BOTH ZERO? EXIT.
+206B EB       XCHG                      ;NO, INCREASE
+206C 34       INR     M                 ;END OF COUNT.
+206D 21BF23  THERE:   LXI H,MADD-LINE-1
+2070 1623     MVI     D,TAD             ;GET IN POSITION FOR TABLE.
+2072 01ED20  BYTE:    LXI B,INST        ;PSEUDO OP LIST
+2075 0A      BIT:     LDAX B            ;LOAD PSEUDO OP.
+2076 0F       RRC                       ;CHECK RIGHT BIT FOR
+2077 D28D20   JNC     ROT               ;CELL CHECK FROM SAME BYTE
+207A 0F       RRC                       ;NO. NEXT BYTE?
+207B D28920   JNC     ONE               ;YES
+207E FEF0     CPI     0F0H              ;NO. ALL NFHBRS DONE THIS BYTE?
+2080 D29F20   JNC     DONE              ;YES.
+2083 113D00   LXI     D,LINE-3          ;NEXT LINE ON 3X3 MATRIX
+2086 19       DAD     D                 ;INCREMENT BY LINE-2
+2087 1623     MVI     D,TAD             ;BY LINE-3+1, SINCE WE NEED
+2089 23      ONE:     INX H             ;A +1 ANYWAY
+208A E63F     ANI     3FH               ;GET RID OF 2 MSB'S.
+208C 07       RLC                       ;ZERO CARRY BIT AND
+208D 1F      ROT:     RAR               ;GET IN POSITION
+208E 03       INX     B                 ;FOR THIS AND NEXT PSEUDO OP
+208F 5F       MOV     E,A               ;2ND BYTE FEEDS MASK TABLE
+2090 1A       LDAX    D                 ;LOAD MASK FOR BIT
+2091 A6       ANA     M                 ;AND CHECK IT ON THE MASTER
+2092 CA7520   JZ      BIT               ;NO LIFE, NEXT BIT
+2095 EB       XCHG                      ;BRING DOWN SCRATCH
+2096 3E07     MVI     A,07H             ;ADDRESS TO STORE NEIGHBOR
+2098 A5       ANA     L                 ;COUNT CODED BY BIT #
+2099 6F       MOV     L,A           
+209A 34       INR     M                 ;COUNT ONE NEIGHBOR
+209B EB       XCHG                      ;GET MASTER COPY
+209C C37520   JMP     BIT               ;AND GET NEXT BIT IN BYTE
+209F 01BFFF  DONE:    LXI B,0-LINE-1    ;GO BACK TO BYTE
+20A2 09       DAD     B                 ;THAT WE'RE WORKING ON
+20A3 1E00     MVI     E,0               ;ZERO SCRATCHPAD BYTE #2
+20A5 E3       XTHL                      ;MOVING ON TO SLAVE COPY.
+20A6 97      LOAD:    SUB A             ;ZERO A SO WE CAN
+20A7 12       STAX    D                 ;ZERO NEIGHBOR COUNT
+20A8 79       MOV     A,C               ;GET INVERTED BIT MASK
+20A9 0F       RRC                       ;COMING IN BFH AND ROTATE
+20AA D2C520   JNC     NEXT              ;GOT ALL BITS?
+20AD 4F       MOV     C,A               ;NO, REPLACE MASK
+20AE 1C       INR     E                 ;AND COUNT BIT NUMBER
+20AF 1A       LDAX    D                 ;GET # NEIGHBORS OF THAT BIT
+20B0 FE02     CPI     02H               ;IS IT TWO?
+20B2 CAA620   JZ      LOAD              ;YES, CELL STAYS THE WAY IT IS
+20B5 79       MOV     A,C               ;NO, SO
+20B6 A6       ANA     M                 ;KILL CELL ON
+20B7 77       MOV     M,A               ;SLAVE COPY
+20B8 1A       LDAX    D                 ;HOW MANY NHBRS AGAIN?
+20B9 FE03     CPI     03H               ;ARE THERE THREE?
+20BB C2A620   JNZ     LOAD              ;YES, GOOD WE KILLED IT.
+20BE 79       MOV     A,C               ;OOPS, GOT TO RESURRECT IT
+20BF 2F       CMA                       ;BY INVERTING THE MASK
+20C0 86       ADD     M                 ;AND ADDING
+20C1 77       MOV     M,A               ;REPLACE SLAVE
+20C2 C3A620   JMP     LOAD              ;UPDATE NEXT BIT IN BYTE
+20C5 01C0FF  NEXT:    LXI B,0-LINE      ;UP ONE, WHICH IS UPPER
+20C8 23       INX     H                 ;INCREMENT SLAVE ADDRESS
+20C9 E3       XTHL                      ;FOR PROPER INITIALIZATION
+20CA 3E28     MVI     A,MAD+04H         ;END OF SCREEN?
+20CC BC       CMP     H           
+20CD 09       DAD     B                 ;COMPLETE ONE UP
+20CE C27220   JNZ     BYTE              ;SCREEN NOT OVER, NEXT BYTE
+20D1 E1       POP     H                 ;LEAVE
+20D2 210029   LXI     H,SADD            ;SADD ON STACK
+20D5 E5       PUSH    H                 ;FOR NEXT TIME, SET UP TO
+20D6 1100F8   LXI     D,VADD            ;SWAP SLAVE TO SCREEN
+20D9 C32320   JMP     LOOP              ;ON EACH SUCCESSIVE LOOP.
+                              ;KBDTST CHECKS THE KEYBOARD FOR "E"
+                              ;(EXIT COMMAND) AND IF SO JUMPS INTO
+                              ;WARMSTART OF GRAPHICS CURSOR
+20DC F5      KBDTST:  PUSH    PSW
+20DD 3A0D0C           LDA     KBUF+1
+20E0 FE45             CPI     'E'
+20E2 C2E920           JNZ     OVER2
+20E5 F1               POP     PSW
+20E6 C32B21           JMP     MODIFY
+20E9 F1      OVER2:   POP     PSW
+20EA C32620           JMP     CONTIN
+20ED C465     INST:DW 65C4H        ;PSEUDO OPS CODE 48
+20EF C470      DW 70C4H            ;SPECIAL CASES:EIGHT
+20F1 D071      DW 71D0H            ;NEIGHBORS FOR EACH OF
+20F3 87A4      DW 0A487H           ;SIX CELLS PER BYTE
+20F5 88A8      DW 0A888H           ;RIGHT TWO BITS OF
+20F7 C8AC      DW 0ACC8H           ;EACH PSEUDO OP INDICATE
+20F9 CC45      DW 45CCH            ;WHETHER NEXT NEIGHBOR IS
+20FB 84A4      DW 0A484H           ;IN THE SAME BYTE AS
+20FD 2868      DW 6828H            ;CURRENT NEIGHBOR, OR IN
+20FF 88A8      DW 0A888H           ;NEXT BYTE, OR NEXT LINE
+2101 C84C      DW 4CC8H            ;IN 3X3 MATRIX OF
+2103 ACCC      DW 0CCACH           ;NEIGHBOR BYTES
+2105 3050      DW 5030H            ;NEXT THREE BITS CODE
+2107 B034      DW 34B0H            ;CELL WHOSE NEIGHBORS
+2109 5474      DW 7454H            ;WE ARE COUNTING, IN
+210B 94D4      DW 0D494H           ;REVERSE ORDER
+210D 5878      DW 7858H            ;REMAINING THREE BITS
+210F B831      DW 31B8H            ;CODE MASK FOR NEIGHBOR
+2111 5034      DW 3450H            ;IN SAME FORMAT
+2113 5474      DW 7454H
+2115 5878      DW 7858H
+2117 8F2D      DW 2D8FH
+2119 8C38      DW 388CH
+211B 9839      DW 3998H
+211D FF        DB 0FFH             ;WRITTEN BY BRIAN WILCOX
+                                   ;(TRANSCRIBED BY XIPHOD, APRIL 2026)
+211E 2100F8   SETUP: LXI H,VADD
+2121 3E0C      MVI A,0CH
+2123 84        ADD H
+2124 367F      WIPE: MVI M,7FH
+2126 23        INX H
+2127 BC        CMP H
+2128 C22421    JNZ WIPE
+212B 0E06     MODIFY: MVI  C,6
+212D 11002E    LXI D,TADD1
+2130 3E01      MVI A,1
+2132 12      TABL1: STAX  D
+2133 07        RLC
+2134 13        INX D
+2135 0D        DCR C
+2136 C23221    JNZ TABL1
+2139 2128FA    LXI H,VADD+0228H
+213C 0600      MVI B,0
+213E 367E      MVI M,7EH
+2140 CD200C  LOOP1:  CALL WH0     ;KEYBOARD INPUT WORMHOLE
+2143 F680            ORI     80H  ;GETS COMMAND CHARACTER
+2145 CD4B21          CALL    OUT1
+2148 C34021          JMP     LOOP1  ;NEXT COMMAND
+214B 4F      OUT1:   MOV     C,A
+214C 7E        MOV A,M
+214D E640      ANI 40H
+214F CA5721    JZ COMP
+2152 CD1522   CALL MASK1
+2155 AE        XRA M
+2156 77        MOV M,A
+                         ;COMMAND INTERPRETER
+2157 79       COMP: MOV A,C
+2158 FED8      CPI 0D8H
+215A CA2422    JZ CLNO
+215D FED5      CPI 0D5H
+215F CCBA21    CZ UP
+2162 FEC4      CPI 0C4H
+2164 CCC921    CZ DOWN
+2167 FED2      CPI 0D2H
+2169 CCD821    CZ RIGHT
+216C FECC      CPI 0CCH
+216E CCE021    CZ LEFT
+2171 FED7      CPI 0D7H
+2173 CCE821    CZ WHITE
+2176 FEC2      CPI 0C2H
+2178 CCED21    CZ BLACK
+217B FECD      CPI 0CDH
+217D CCF421    CZ MOVE
+2180 FEB1      CPI 0B1H
+2182 CCF921    CZ ONE1
+2185 FEB2      CPI 0B2H
+2187 CC0022    CZ TWO
+218A FEB3      CPI 0B3H
+218C CC0722    CZ THREE
+218F FEB4      CPI 0B4H
+2191 CC0E22    CZ FOUR
+2194 CD1522   CALL MASK1
+2197 A6        ANA M
+2198 CAA321    JZ LITE
+219B 2F        CMA
+219C A6        ANA M
+219D F640      ORI 40H
+219F 77        MOV M,A
+21A0 C3A721    JMP BACK
+21A3 3EBF     LITE:  MVI A,0BFH
+21A5 A6        ANA M
+21A6 77        MOV M,A
+21A7 78       BACK:  MOV A,B
+21A8 E660      ANI 60H
+21AA C8        RZ
+21AB E640      ANI 40H
+21AD C2B521    JNZ BRITE
+21B0 3E40      MVI A,40H
+21B2 B6        ORA M
+21B3 77        MOV M,A
+21B4 C9        RET
+21B5 3EBF     BRITE: MVI A,0BFH
+21B7 A6        ANA M
+21B8 77        MOV M,A
+21B9 C9        RET
+21BA 78       UP: MOV A,B
+21BB E602      ANI 2
+21BD C2C221    JNZ HERE1
+21C0 04        INR B
+21C1 C9        RET
+21C2 05      HERE1: DCR B
+21C3 05        DCR B
+21C4 11C0FF    LXI D,0-LINE
+21C7 19        DAD D
+21C8 C9        RET
+21C9 78       DOWN: MOV A,B
+21CA E603      ANI 3
+21CC CAD121    JZ THER1
+21CF 05        DCR B
+21D0 C9        RET
+21D1 04      THER1: INR B
+21D2 04        INR B
+21D3 114000    LXI D,LINE
+21D6 19        DAD D
+21D7 C9        RET
+21D8 78       RIGHT: MOV A,B
+21D9 07        RLC
+21DA 3F        CMC
+21DB 1F        RAR
+21DC 47        MOV B,A
+21DD D8        RC
+21DE 23        INX H
+21DF C9        RET
+21E0 78       LEFT: MOV A,B
+21E1 07        RLC
+21E2 3F        CMC
+21E3 1F        RAR
+21E4 47        MOV B,A
+21E5 D0        RNC
+21E6 2B        DCX H
+21E7 C9        RET
+21E8 78       WHITE: MOV A,B
+21E9 F660      ORI 60H
+21EB 47        MOV B,A
+21EC C9        RET
+21ED 78       BLACK: MOV A,B
+21EE F620      ORI 20H
+21F0 E6BF      ANI 0BFH
+21F2 47        MOV B,A
+21F3 C9        RET
+21F4 78       MOVE: MOV A,B
+21F5 E69F      ANI 9FH
+21F7 47        MOV B,A
+21F8 C9        RET
+21F9 CDBA21  ONE1: CALL UP
+21FC CDD821    CALL RIGHT
+21FF C9        RET
+2200 CDBA21   TWO: CALL UP
+2203 CDE021    CALL LEFT
+2206 C9        RET
+2207 CDC921   THREE: CALL DOWN
+220A CDE021    CALL LEFT
+220D C9        RET
+220E CDC921   FOUR: CALL DOWN
+2211 CDD821    CALL RIGHT
+2214 C9        RET
+2215 78      MASK1: MOV A,B
+2216 07        RLC
+2217 1F        RAR
+2218 D21D22    JNC CLEAR
+221B C603      ADI 3
+221D E61F     CLEAR: ANI 1FH
+221F 162E     MVI D,TAD1
+2221 5F       MOV E,A
+2222 1A       LDAX D
+2223 C9       RET
+                           ;THIS ROUTINE KILLS THE GENERATION
+                           ;COUNTER WHEN JUPING INTO A MODIFIED
+                           ;LIFE SO THE OCUNTER DOSN'T BECOME LIFE
+2224 2100F8  CLNO:  LXI    H,VADD
+2227 7D      CLNO1: MOV    A,L
+2228 FE40          CPI     40H     ;END OF FIRST LINE
+222A CA0320        JZ      2003H   ;BEGINING OF LIFE PROGRAM
+222D 7E            MOV     A,M
+222E E680          ANI     80H     ;IS IT GRAPHICS? IF N0
+2230 C43722        CNZ     BLANK   ;PUT IN GRAPHICS BLANK
+2233 23            INX     H
+2234 C32722        JMP     CLNO1
+2237 363F         BLANK: MVI M,3FH
+2239 C9                  RET
+0000        END
+

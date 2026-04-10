@@ -1,0 +1,62 @@
+usage: as\bin\asl [options] [file] [options] ...
+
+options:
+  -A                   : compact symbol table
+  -a                   : share file formatted for AS
+  -alias <new>=<old>   : define processor alias
+  -bigendian           : turn on BIGENDIAN mode by default
+  -C                   : generate cross reference list
+  -c                   : share file formatted for C
+  -cpu <name>          : set target processor
+                         ('?' or 'list' to list available ones and exit)
+  -D <symbol>[,symbol] : predefine symbols
+  -E <name>            : target file for error list,
+                         !0..!4 for standard handles
+                         default is <srcname>.LOG
+  +G                   : suppress code generation
+  -g [map|atmel|noice] : write debug info
+  -gnuerrors           : error messages in GNU format
+  -help                : print help and exit
+  -h                   : use lower case in hexadecimal output
+  -I                   : generate include nesting list
+  -i <path>[;path]...  : list of paths for include files
+  -intsyntax <arg>[,arg] : modify syntax for integer constants
+  -L                   : listing to file
+  -l                   : listing to console
+  -listline-prefix <fmt> : set format of listing per-line prefix
+  -listradix <2...36>  : number system in listing
+  -list-macro-handles  : list macro's symbol handles
+  -[no-]list-unknown-values : display unknown values in listing as question marks
+  -M                   : extract macro definitions
+  -maxerrors <number>  : terminate assembly after <number> errors
+  -maxinclevel <number>: limit include nesting level to <number>
+  -maxsympass <number> : allow unresolved forward references up to pass <number>
+  -n                   : add error #s to error messages
+  -olist <nname>       : change name of list file
+  -o <name>            : change name of code file
+  -p                   : share file formatted for Pascal
+  -P                   : write macro processor output
+  -plainbase           : PLAINBASE Modus im Default einschalten
+  -q, -quiet           : silent operation
+  -r                   : generate messages if repassing necessary
+  -radix <2...36>      : set default number system
+  -relaxed             : allow arbitrary integer syntax by default
+  -screenheight <#>    : set screen height for paging of '-help'
+                         and '-cpu list'
+  -s                   : generate section list
+  -shareout <nname>    : change name of share file
+  -splitbyte [char]    : use split byte display of numbers
+  -t                   : enable/disable parts of listing
+  -U                   : case-sensitive operation
+  -u                   : generate usage list
+  -underscore-macroargs: allow underbars in macro arguments
+  -v                   : verbose operation
+  -version             : print version info and exit
+  -w                   : suppress warnings
+  -Werror              : treat warnings as errors
+  -w[no-]implicit-sign-extension : enable/disable sign extension warnings
+  -w[no-]relative      : enable/disable warnings about possible relative jump
+  -x                   : extended error messages
+  -Y                   : branch error suppression (see manual)
+
+source file specification may contain wildcards

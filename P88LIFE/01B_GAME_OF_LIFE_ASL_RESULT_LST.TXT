@@ -1,0 +1,425 @@
+ AS V1.42 Beta [Bld 302] - Source File GAME_OF_LIFE_CODE_ONLY.ASM - Page 1 - 4/6/2026 17:29:22
+
+
+    1/   0 :                            ; LIFE WITH GRAPHICS CURSOR FOR 4.0 MONITOR ROM
+    2/2000 :                            	ORG     2000H
+    3/2000 : =2E00H                     TADD1   EQU     2E00H
+    4/2000 : =0C20H                     WH0     EQU     0C20H
+    5/2000 : =2EH                       TAD1    EQU     2EH
+    6/2000 : =0F800H                    VADD    EQU     0F800H       ; VIDEO BLOCK ADDRESS
+    7/2000 : =0C0CH                     KBUF    EQU     0C0CH        ; KEYBOARD INPUT BUFFER ADDRESS
+    8/2000 : =2400H                     MADD    EQU     2400H        ; MASTER COPY ADDRESS
+    9/2000 : =2900H                     SADD    EQU     2900H        ; SLAVE COPY ADDRESS
+   10/2000 : =24H                       MAD     EQU     24H          ; 1ST BYTE OF MADD
+   11/2000 : =29H                       SAD     EQU     29H          ; 1ST BYTE OF SADD
+   12/2000 : =40H                       LINE    EQU     64           ; LINE LENGTH
+   13/2000 : =2308H                     TADD    EQU     2308H        ; TABLE (MASK & SCRATCH)
+   14/2000 : =23H                       TAD     EQU     23H          ; 1ST BYTE OF TADD
+   15/2000 : =2280H                     CADD    EQU     2280H        ; COUNT ADDRESS (GENERATIONS)
+   16/2000 : C3 1E 21                   	JMP     SETUP                ; START OF GRAPHICS CURSOR
+   17/2003 : 21 08 23                   	LXI     H,TADD               ; SET UP MASK TABLE
+   18/2006 : 3E 20                      	MVI     A,20H                ; FIRST MASK FOR TABLE
+   19/2008 : 0E 08                      MASK:    MVI C,08H            ; GETS EIGHT SPOTS
+   20/200A : 77                         TABLE:   MOV M,A
+   21/200B : 23                         	INX     H
+   22/200C : 0D                         	DCR     C
+   23/200D : C2 0A 20                   	JNZ     TABLE             ;IN TABLE.
+   24/2010 : 0F                         	RRC                       ;THEN MASK FOR NEXT LOWER BIT
+   25/2011 : D2 08 20                   	JNC     MASK              ;GETS THE NEXT EIGHT.
+   26/2014 : 21 00 29                   	LXI     H,SADD            ;SAVE SLAVE ADDRESS
+   27/2017 : E5                         	PUSH    H                 ;FOR USE IN LOOP
+   28/2018 : 21 80 22                   	LXI     H,CADD            ;LOAD CADD WITH OWN
+   29/201B : 36 80                      	MVI     M,80H             ;SECOND BYTE TO START COUNT.
+   30/201D : 21 C0 F7                   	LXI     H,VADD-40H        ;SET UP FOR SWAP FROM
+   31/2020 : 11 C0 28                   	LXI     D,SADD-40H        ;SCREEN TO SLAVE WITH SLOP.
+   32/2023 : C3 DC 20                   LOOP:    JMP KBDTST
+   33/2026 : 7E                         CONTIN:  MOV A,M
+   34/2027 : 2F                         	CMA                       ;COMPLEMENT FOR TRUE LIFE
+   35/2028 : 12                         	STAX    D                 ;STORE ON OTHER COPY.
+   36/2029 : 23                         	INX     H                 ;NEXT
+   37/202A : 13                         	INX     D                 ;SPOT.
+   38/202B : 7C                         	MOV     A,H               ;CHECK
+   39/202C : E6 07                      	ANI     7                 ;LAST THREE BITS OF 1ST BYTE
+   40/202E : FE 05                      	CPI     5                 ;FOR END
+   41/2030 : C2 23 20                   	JNZ     LOOP              ;OF COPY PLUS SLOP.
+   42/2033 : 21 C0 28                   	LXI     H,SADD-40H        ;SWAP SLAVE
+   43/2036 : 11 C0 23                   	LXI     D,MADD-40H        ;TO MASTER
+   44/2039 : 7E                         SWAP:    MOV A,M
+   45/203A : 12                         	STAX    D
+   46/203B : 23                         	INX     H
+   47/203C : 13                         	INX     D
+   48/203D : 7C                         	MOV     A,H
+   49/203E : FE 2E                      	CPI     SAD+5             ;WITH SLOP
+   50/2040 : C2 39 20                   	JNZ     SWAP              ;UP TO HERE.
+   51/2043 : 11 80 22                   	LXI     D,CADD            ;SET UP FOR COUNT
+   52/2046 : 01 28 F8                   	LXI     B,VADD+28H        ;IN UPPER RIGHT OF SCREEN
+   53/2049 : 21 80 22                   	LXI     H,CADD            ;WATCH THE ZERO AND CARRY!!
+   54/204C : 6B                         	MOV     L,E
+   55/204D : 23                         COUNT:   INX H             ;NEXT SIGNIFICANT DIGIT
+   56/204E : 0B                         	DCX     B                 ;NEXT DOWN ON SCREEN
+   57/204F : C2 53 20                   	JNZ     NOINC             ;ZERO FLAG TO INCREMENT
+   58/2052 : 34                         	INR     M
+   59/2053 : 1A                         NOINC:   LDAX D            ;ARE WE TO END
+   60/2054 : BD                         	CMP     L                 ;OF COUNT (STORED AT CADD)?
+ AS V1.42 Beta [Bld 302] - Source File GAME_OF_LIFE_CODE_ONLY.ASM - Page 2 - 4/6/2026 17:29:22
+
+
+   61/2055 : DA 5E 20                   	JC      REP               ;YES
+   62/2058 : 3E BA                      	MVI     A,0BAH            ;NO, CHECK FOR
+   63/205A : BE                         	CMP     M                 ;DECIMAL CARRY IN ASCII.
+   64/205B : C2 61 20                   	JNZ     HERE              ;NO
+   65/205E : 3E B0                      REP:     MVI A,0B0H        ;YES, ZERO THAT DIGIT
+   66/2060 : 77                         	MOV     M,A               ;AND REPLACE MEMORY.
+   67/2061 : 7E                         HERE:    MOV A,M           ;GET MEMORY
+   68/2062 : 02                         	STAX    B                 ;AND VIEW IT
+   69/2063 : D2 4D 20                   	JNC     COUNT             ;UNTIL ALL DIGITS ARE VIEWED.
+   70/2066 : 2B                         	DCX     H                 ;CHECK MOST SIGNIFICANT DIGIT
+   71/2067 : BE                         	CMP     M                 ;AGAINST NEXT MOST.
+   72/2068 : CA 6D 20                   	JZ      THERE             ;BOTH ZERO? EXIT.
+   73/206B : EB                         	XCHG                      ;NO, INCREASE
+   74/206C : 34                         	INR     M                 ;END OF COUNT.
+   75/206D : 21 BF 23                   THERE:   LXI H,MADD-LINE-1
+   76/2070 : 16 23                      	MVI     D,TAD             ;GET IN POSITION FOR TABLE.
+   77/2072 : 01 ED 20                   BYTE:    LXI B,INST        ;PSEUDO OP LIST
+   78/2075 : 0A                         BIT:     LDAX B            ;LOAD PSEUDO OP.
+   79/2076 : 0F                         	RRC                       ;CHECK RIGHT BIT FOR
+   80/2077 : D2 8D 20                   	JNC     ROT               ;CELL CHECK FROM SAME BYTE
+   81/207A : 0F                         	RRC                       ;NO. NEXT BYTE?
+   82/207B : D2 89 20                   	JNC     ONE               ;YES
+   83/207E : FE F0                      	CPI     0F0H              ;NO. ALL NFHBRS DONE THIS BYTE?
+   84/2080 : D2 9F 20                   	JNC     DONE              ;YES.
+   85/2083 : 11 3D 00                   	LXI     D,LINE-3          ;NEXT LINE ON 3X3 MATRIX
+   86/2086 : 19                         	DAD     D                 ;INCREMENT BY LINE-2
+   87/2087 : 16 23                      	MVI     D,TAD             ;BY LINE-3+1, SINCE WE NEED
+   88/2089 : 23                         ONE:     INX H             ;A +1 ANYWAY
+   89/208A : E6 3F                      	ANI     3FH               ;GET RID OF 2 MSB'S.
+   90/208C : 07                         	RLC                       ;ZERO CARRY BIT AND
+   91/208D : 1F                         ROT:     RAR               ;GET IN POSITION
+   92/208E : 03                         	INX     B                 ;FOR THIS AND NEXT PSEUDO OP
+   93/208F : 5F                         	MOV     E,A               ;2ND BYTE FEEDS MASK TABLE
+   94/2090 : 1A                         	LDAX    D                 ;LOAD MASK FOR BIT
+   95/2091 : A6                         	ANA     M                 ;AND CHECK IT ON THE MASTER
+   96/2092 : CA 75 20                   	JZ      BIT               ;NO LIFE, NEXT BIT
+   97/2095 : EB                         	XCHG                      ;BRING DOWN SCRATCH
+   98/2096 : 3E 07                      	MVI     A,07H             ;ADDRESS TO STORE NEIGHBOR
+   99/2098 : A5                         	ANA     L                 ;COUNT CODED BY BIT #
+  100/2099 : 6F                         	MOV     L,A           
+  101/209A : 34                         	INR     M                 ;COUNT ONE NEIGHBOR
+  102/209B : EB                         	XCHG                      ;GET MASTER COPY
+  103/209C : C3 75 20                   	JMP     BIT               ;AND GET NEXT BIT IN BYTE
+  104/209F : 01 BF FF                   DONE:    LXI B,0-LINE-1    ;GO BACK TO BYTE
+  105/20A2 : 09                         	DAD     B                 ;THAT WE'RE WORKING ON
+  106/20A3 : 1E 00                      	MVI     E,0               ;ZERO SCRATCHPAD BYTE #2
+  107/20A5 : E3                         	XTHL                      ;MOVING ON TO SLAVE COPY.
+  108/20A6 : 97                         LOAD:    SUB A             ;ZERO A SO WE CAN
+  109/20A7 : 12                         	STAX    D                 ;ZERO NEIGHBOR COUNT
+  110/20A8 : 79                         	MOV     A,C               ;GET INVERTED BIT MASK
+  111/20A9 : 0F                         	RRC                       ;COMING IN BFH AND ROTATE
+  112/20AA : D2 C5 20                   	JNC     NEXT              ;GOT ALL BITS?
+  113/20AD : 4F                         	MOV     C,A               ;NO, REPLACE MASK
+  114/20AE : 1C                         	INR     E                 ;AND COUNT BIT NUMBER
+  115/20AF : 1A                         	LDAX    D                 ;GET # NEIGHBORS OF THAT BIT
+  116/20B0 : FE 02                      	CPI     02H               ;IS IT TWO?
+  117/20B2 : CA A6 20                   	JZ      LOAD              ;YES, CELL STAYS THE WAY IT IS
+  118/20B5 : 79                         	MOV     A,C               ;NO, SO
+  119/20B6 : A6                         	ANA     M                 ;KILL CELL ON
+  120/20B7 : 77                         	MOV     M,A               ;SLAVE COPY
+ AS V1.42 Beta [Bld 302] - Source File GAME_OF_LIFE_CODE_ONLY.ASM - Page 3 - 4/6/2026 17:29:22
+
+
+  121/20B8 : 1A                         	LDAX    D                 ;HOW MANY NHBRS AGAIN?
+  122/20B9 : FE 03                      	CPI     03H               ;ARE THERE THREE?
+  123/20BB : C2 A6 20                   	JNZ     LOAD              ;YES, GOOD WE KILLED IT.
+  124/20BE : 79                         	MOV     A,C               ;OOPS, GOT TO RESURRECT IT
+  125/20BF : 2F                         	CMA                       ;BY INVERTING THE MASK
+  126/20C0 : 86                         	ADD     M                 ;AND ADDING
+  127/20C1 : 77                         	MOV     M,A               ;REPLACE SLAVE
+  128/20C2 : C3 A6 20                   	JMP     LOAD              ;UPDATE NEXT BIT IN BYTE
+  129/20C5 : 01 C0 FF                   NEXT:    LXI B,0-LINE      ;UP ONE, WHICH IS UPPER
+  130/20C8 : 23                         	INX     H                 ;INCREMENT SLAVE ADDRESS
+  131/20C9 : E3                         	XTHL                      ;FOR PROPER INITIALIZATION
+  132/20CA : 3E 28                      	MVI     A,MAD+04H         ;END OF SCREEN?
+  133/20CC : BC                         	CMP     H           
+  134/20CD : 09                         	DAD     B                 ;COMPLETE ONE UP
+  135/20CE : C2 72 20                   	JNZ     BYTE              ;SCREEN NOT OVER, NEXT BYTE
+  136/20D1 : E1                         	POP     H                 ;LEAVE
+  137/20D2 : 21 00 29                   	LXI     H,SADD            ;SADD ON STACK
+  138/20D5 : E5                         	PUSH    H                 ;FOR NEXT TIME, SET UP TO
+  139/20D6 : 11 00 F8                   	LXI     D,VADD            ;SWAP SLAVE TO SCREEN
+  140/20D9 : C3 23 20                   	JMP     LOOP              ;ON EACH SUCCESSIVE LOOP.
+  141/20DC :                                                          ;KBDTST CHECKS THE KEYBOARD FOR "E"
+  142/20DC :                                                          ;(EXIT COMMAND) AND IF SO JUMPS INTO
+  143/20DC :                                                          ;WARMSTART OF GRAPHICS CURSOR
+  144/20DC : F5                         KBDTST:  PUSH    PSW
+  145/20DD : 3A 0D 0C                   	LDA     KBUF+1
+  146/20E0 : FE 45                      	CPI     'E'
+  147/20E2 : C2 E9 20                   	JNZ     OVER2
+  148/20E5 : F1                         	POP     PSW
+  149/20E6 : C3 2B 21                   	JMP     MODIFY
+  150/20E9 : F1                         OVER2:POP     PSW
+  151/20EA : C3 26 20                   	JMP     CONTIN
+  152/20ED : C4 65                      INST:DW 65C4H        ;PSEUDO OPS CODE 48
+  153/20EF : C4 70                      	DW 70C4H            ;SPECIAL CASES:EIGHT
+  154/20F1 : D0 71                      	DW 71D0H            ;NEIGHBORS FOR EACH OF
+  155/20F3 : 87 A4                      	DW 0A487H           ;SIX CELLS PER BYTE
+  156/20F5 : 88 A8                      	DW 0A888H           ;RIGHT TWO BITS OF
+  157/20F7 : C8 AC                      	DW 0ACC8H           ;EACH PSEUDO OP INDICATE
+  158/20F9 : CC 45                      	DW 45CCH            ;WHETHER NEXT NEIGHBOR IS
+  159/20FB : 84 A4                      	DW 0A484H           ;IN THE SAME BYTE AS
+  160/20FD : 28 68                      	DW 6828H            ;CURRENT NEIGHBOR, OR IN
+  161/20FF : 88 A8                      	DW 0A888H           ;NEXT BYTE, OR NEXT LINE
+  162/2101 : C8 4C                      	DW 4CC8H            ;IN 3X3 MATRIX OF
+  163/2103 : AC CC                      	DW 0CCACH           ;NEIGHBOR BYTES
+  164/2105 : 30 50                      	DW 5030H            ;NEXT THREE BITS CODE
+  165/2107 : B0 34                      	DW 34B0H            ;CELL WHOSE NEIGHBORS
+  166/2109 : 54 74                      	DW 7454H            ;WE ARE COUNTING, IN
+  167/210B : 94 D4                      	DW 0D494H           ;REVERSE ORDER
+  168/210D : 58 78                      	DW 7858H            ;REMAINING THREE BITS
+  169/210F : B8 31                      	DW 31B8H            ;CODE MASK FOR NEIGHBOR
+  170/2111 : 50 34                      	DW 3450H            ;IN SAME FORMAT
+  171/2113 : 54 74                      	DW 7454H
+  172/2115 : 58 78                      	DW 7858H
+  173/2117 : 8F 2D                      	DW 2D8FH
+  174/2119 : 8C 38                      	DW 388CH
+  175/211B : 98 39                      	DW 3998H
+  176/211D : FF                         	DB 0FFH             ;WRITTEN BY BRIAN WILCOX
+  177/211E :                                                               ;(TRANSCRIBED BY XIPHOD, APRIL 2026)
+  178/211E : 21 00 F8                   SETUP: LXI H,VADD
+  179/2121 : 3E 0C                      	MVI A,0CH
+  180/2123 : 84                         	ADD H
+ AS V1.42 Beta [Bld 302] - Source File GAME_OF_LIFE_CODE_ONLY.ASM - Page 4 - 4/6/2026 17:29:22
+
+
+  181/2124 : 36 7F                      WIPE: MVI M,7FH
+  182/2126 : 23                         	INX H
+  183/2127 : BC                         	CMP H
+  184/2128 : C2 24 21                   	JNZ WIPE
+  185/212B : 0E 06                      MODIFY: MVI  C,6
+  186/212D : 11 00 2E                   	LXI D,TADD1
+  187/2130 : 3E 01                      	MVI A,1
+  188/2132 : 12                         TABL1: STAX  D
+  189/2133 : 07                         	RLC
+  190/2134 : 13                         	INX D
+  191/2135 : 0D                         	DCR C
+  192/2136 : C2 32 21                   	JNZ TABL1
+  193/2139 : 21 28 FA                   	LXI H,VADD+0228H
+  194/213C : 06 00                      	MVI B,0
+  195/213E : 36 7E                      	MVI M,7EH
+  196/2140 : CD 20 0C                   LOOP1:  CALL WH0     ;KEYBOARD INPUT WORMHOLE
+  197/2143 : F6 80                      	ORI     80H  ;GETS COMMAND CHARACTER
+  198/2145 : CD 4B 21                   	CALL    OUT1
+  199/2148 : C3 40 21                   	JMP     LOOP1  ;NEXT COMMAND
+  200/214B : 4F                         OUT1:   MOV     C,A
+  201/214C : 7E                         	MOV A,M
+  202/214D : E6 40                      	ANI 40H
+  203/214F : CA 57 21                   	JZ COMP
+  204/2152 : CD 15 22                   	CALL MASK1
+  205/2155 : AE                         	XRA M
+  206/2156 : 77                         	MOV M,A
+  207/2157 :                                                     ;COMMAND INTERPRETER
+  208/2157 : 79                         COMP: MOV A,C
+  209/2158 : FE D8                      	CPI 0D8H
+  210/215A : CA 24 22                   	JZ CLNO
+  211/215D : FE D5                      	CPI 0D5H
+  212/215F : CC BA 21                   	CZ UP
+  213/2162 : FE C4                      	CPI 0C4H
+  214/2164 : CC C9 21                   	CZ DOWN
+  215/2167 : FE D2                      	CPI 0D2H
+  216/2169 : CC D8 21                   	CZ RIGHT
+  217/216C : FE CC                      	CPI 0CCH
+  218/216E : CC E0 21                   	CZ LEFT
+  219/2171 : FE D7                      	CPI 0D7H
+  220/2173 : CC E8 21                   	CZ WHITE
+  221/2176 : FE C2                      	CPI 0C2H
+  222/2178 : CC ED 21                   	CZ BLACK
+  223/217B : FE CD                      	CPI 0CDH
+  224/217D : CC F4 21                   	CZ MOVE
+  225/2180 : FE B1                      	CPI 0B1H
+  226/2182 : CC F9 21                   	CZ ONE1
+  227/2185 : FE B2                      	CPI 0B2H
+  228/2187 : CC 00 22                   	CZ TWO
+  229/218A : FE B3                      	CPI 0B3H
+  230/218C : CC 07 22                   	CZ THREE
+  231/218F : FE B4                      	CPI 0B4H
+  232/2191 : CC 0E 22                   	CZ FOUR
+  233/2194 : CD 15 22                   	CALL MASK1
+  234/2197 : A6                         	ANA M
+  235/2198 : CA A3 21                   	JZ LITE
+  236/219B : 2F                         	CMA
+  237/219C : A6                         	ANA M
+  238/219D : F6 40                      	ORI 40H
+  239/219F : 77                         	MOV M,A
+  240/21A0 : C3 A7 21                   	JMP BACK
+ AS V1.42 Beta [Bld 302] - Source File GAME_OF_LIFE_CODE_ONLY.ASM - Page 5 - 4/6/2026 17:29:22
+
+
+  241/21A3 : 3E BF                      LITE:  MVI A,0BFH
+  242/21A5 : A6                         	ANA M
+  243/21A6 : 77                         	MOV M,A
+  244/21A7 : 78                         BACK:  MOV A,B
+  245/21A8 : E6 60                      	ANI 60H
+  246/21AA : C8                         	RZ
+  247/21AB : E6 40                      	ANI 40H
+  248/21AD : C2 B5 21                   	JNZ BRITE
+  249/21B0 : 3E 40                      	MVI A,40H
+  250/21B2 : B6                         	ORA M
+  251/21B3 : 77                         	MOV M,A
+  252/21B4 : C9                         	RET
+  253/21B5 : 3E BF                      BRITE: MVI A,0BFH
+  254/21B7 : A6                         	ANA M
+  255/21B8 : 77                         	MOV M,A
+  256/21B9 : C9                         	RET
+  257/21BA : 78                         UP: MOV A,B
+  258/21BB : E6 02                      	ANI 2
+  259/21BD : C2 C2 21                   	JNZ HERE1
+  260/21C0 : 04                         	INR B
+  261/21C1 : C9                         	RET
+  262/21C2 : 05                         HERE1: DCR B
+  263/21C3 : 05                         	DCR B
+  264/21C4 : 11 C0 FF                   	LXI D,0-LINE
+  265/21C7 : 19                         	DAD D
+  266/21C8 : C9                         	RET
+  267/21C9 : 78                         DOWN: MOV A,B
+  268/21CA : E6 03                      	ANI 3
+  269/21CC : CA D1 21                   	JZ THER1
+  270/21CF : 05                         	DCR B
+  271/21D0 : C9                         	RET
+  272/21D1 : 04                         THER1: INR B
+  273/21D2 : 04                         	INR B
+  274/21D3 : 11 40 00                   	LXI D,LINE
+  275/21D6 : 19                         	DAD D
+  276/21D7 : C9                         	RET
+  277/21D8 : 78                         RIGHT: MOV A,B
+  278/21D9 : 07                         	RLC
+  279/21DA : 3F                         	CMC
+  280/21DB : 1F                         	RAR
+  281/21DC : 47                         	MOV B,A
+  282/21DD : D8                         	RC
+  283/21DE : 23                         	INX H
+  284/21DF : C9                         	RET
+  285/21E0 : 78                         LEFT: MOV A,B
+  286/21E1 : 07                         	RLC
+  287/21E2 : 3F                         	CMC
+  288/21E3 : 1F                         	RAR
+  289/21E4 : 47                         	MOV B,A
+  290/21E5 : D0                         	RNC
+  291/21E6 : 2B                         	DCX H
+  292/21E7 : C9                         	RET
+  293/21E8 : 78                         WHITE: MOV A,B
+  294/21E9 : F6 60                      	ORI 60H
+  295/21EB : 47                         	MOV B,A
+  296/21EC : C9                         	RET
+  297/21ED : 78                         BLACK: MOV A,B
+  298/21EE : F6 20                      	ORI 20H
+  299/21F0 : E6 BF                      	ANI 0BFH
+  300/21F2 : 47                         	MOV B,A
+ AS V1.42 Beta [Bld 302] - Source File GAME_OF_LIFE_CODE_ONLY.ASM - Page 6 - 4/6/2026 17:29:22
+
+
+  301/21F3 : C9                         	RET
+  302/21F4 : 78                         MOVE: MOV A,B
+  303/21F5 : E6 9F                      	ANI 9FH
+  304/21F7 : 47                         	MOV B,A
+  305/21F8 : C9                         	RET
+  306/21F9 : CD BA 21                   ONE1: CALL UP
+  307/21FC : CD D8 21                   	CALL RIGHT
+  308/21FF : C9                         	RET
+  309/2200 : CD BA 21                   TWO: CALL UP
+  310/2203 : CD E0 21                   	CALL LEFT
+  311/2206 : C9                         	RET
+  312/2207 : CD C9 21                   THREE: CALL DOWN
+  313/220A : CD E0 21                   	CALL LEFT
+  314/220D : C9                         	RET
+  315/220E : CD C9 21                   FOUR: CALL DOWN
+  316/2211 : CD D8 21                   	CALL RIGHT
+  317/2214 : C9                         	RET
+  318/2215 : 78                         MASK1: MOV A,B
+  319/2216 : 07                         	RLC
+  320/2217 : 1F                         	RAR
+  321/2218 : D2 1D 22                   	JNC CLEAR
+  322/221B : C6 03                      	ADI 3
+  323/221D : E6 1F                      CLEAR: ANI 1FH
+  324/221F : 16 2E                      	MVI D,TAD1
+  325/2221 : 5F                         	MOV E,A
+  326/2222 : 1A                         	LDAX D
+  327/2223 : C9                         	RET
+  328/2224 :                                                       ;THIS ROUTINE KILLS THE GENERATION
+  329/2224 :                                                       ;COUNTER WHEN JUPING INTO A MODIFIED
+  330/2224 :                                                       ;LIFE SO THE OCUNTER DOSN'T BECOME LIFE
+  331/2224 : 21 00 F8                   CLNO:  LXI    H,VADD
+  332/2227 : 7D                         CLNO1: MOV    A,L
+  333/2228 : FE 40                      	CPI     40H     ;END OF FIRST LINE
+  334/222A : CA 03 20                   	JZ      2003H   ;BEGINING OF LIFE PROGRAM
+  335/222D : 7E                         	MOV     A,M
+  336/222E : E6 80                      	ANI     80H     ;IS IT GRAPHICS? IF N0
+  337/2230 : C4 37 22                   	CNZ     BLANK   ;PUT IN GRAPHICS BLANK
+  338/2233 : 23                         	INX     H
+  339/2234 : C3 27 22                   	JMP     CLNO1
+  340/2237 : 36 3F                      BLANK: MVI M,3FH
+  341/2239 : C9                         	RET
+ AS V1.42 Beta [Bld 302] - Source File GAME_OF_LIFE_CODE_ONLY.ASM - Page 7 - 4/6/2026 17:29:22
+
+
+  Symbol Table (* = unused):
+  --------------------------
+
+*ARCHITECTURE :                                        "i386-unknown-win32" - |
+ BACK :                        21A7 C |  BIT :                         2075 C |
+ BLACK :                       21ED C |  BLANK :                       2237 C |
+ BRITE :                       21B5 C |  BYTE :                        2072 C |
+ CADD :                        2280 - | *CASESENSITIVE :                  0 - |
+ CLEAR :                       221D C |  CLNO :                        2224 C |
+ CLNO1 :                       2227 C |  COMP :                        2157 C |
+*CONSTPI :        3.141592653589793 - |  CONTIN :                      2026 C |
+ COUNT :                       204D C | *DATE :                  "4/6/2026" - |
+ DONE :                        209F C |  DOWN :                        21C9 C |
+*FALSE :                          0 - | *FLOATMAX :      1.797693134866E308 - |
+ FOUR :                        220E C | *HAS64 :                          1 - |
+ HERE :                        2061 C |  HERE1 :                       21C2 C |
+ INST :                        20ED C | *INTWIDTH :                      40 - |
+ KBDTST :                      20DC C |  KBUF :                        0C0C - |
+ LEFT :                        21E0 C |  LINE :                          40 - |
+*LISTON :                         1 - |  LITE :                        21A3 C |
+ LOAD :                        20A6 C |  LOOP :                        2023 C |
+ LOOP1 :                       2140 C | *MACEXP :                         7 - |
+ MAD :                           24 - |  MADD :                        2400 - |
+ MASK :                        2008 C |  MASK1 :                       2215 C |
+ MODIFY :                      212B C | *MOMCPU :                      8080 - |
+*MOMCPUNAME :                "8080" - |  MOVE :                        21F4 C |
+*NESTMAX :                      100 - |  NEXT :                        20C5 C |
+ NOINC :                       2053 C |  ONE :                         2089 C |
+ ONE1 :                        21F9 C |  OUT1 :                        214B C |
+ OVER2 :                       20E9 C | *RELAXED :                        0 - |
+ REP :                         205E C |  RIGHT :                       21D8 C |
+ ROT :                         208D C |  SAD :                           29 - |
+ SADD :                        2900 - |  SETUP :                       211E C |
+ SWAP :                        2039 C |  TABL1 :                       2132 C |
+ TABLE :                       200A C |  TAD :                           23 - |
+ TAD1 :                          2E - |  TADD :                        2308 - |
+ TADD1 :                       2E00 - |  THER1 :                       21D1 C |
+ THERE :                       206D C |  THREE :                       2207 C |
+*TIME :                  "17:29:22" - | *TRUE :                           1 - |
+ TWO :                         2200 C |  UP :                          21BA C |
+ VADD :                       0F800 - | *VERSION :                     142F - |
+ WH0 :                         0C20 - |  WHITE :                       21E8 C |
+ WIPE :                        2124 C | *Z80SYNTAX :                      0 - |
+
+     79 symbols
+     18 unused symbols
+
+ AS V1.42 Beta [Bld 302] - Source File GAME_OF_LIFE_CODE_ONLY.ASM - Page 8 - 4/6/2026 17:29:22
+
+
+  Code Pages:
+  ----------
+
+STANDARD (0 changed characters)
+
+1 code page
+
+0.03 seconds assembly time
+
+    341 lines source file
+      2 passes
+      0 errors
+      0 warnings
